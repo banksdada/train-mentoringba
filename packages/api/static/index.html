@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BA Automation Lab | MentoringBA</title>
+<meta name="description" content="A hands-on course for Business Analysts: use an AI agent to draft requirements, stories, tests and traceability, with four human approval gates.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%2314574B%27/%3E%3Crect x=%277%27 y=%2713%27 width=%2718%27 height=%276%27 rx=%272%27 fill=%27%23fff%27/%3E%3C/svg%3E">
+<style>
+:root{
+  /* Brand colours live here. Change these values to restyle the whole site. */
+  --paper:#F2F5F3; --surface:#FFFFFF; --ink:#16292A; --muted:#4D625F; --line:#CCD6D2;
+  --brand:#14574B; --brand-dark:#0E3F36; --brand-tint:#E1EEE9;
+  --gate:#B3261E; --gate-tint:#FBE9E7;
+  --confirmed:#17613B; --confirmed-bg:#DCF0E3;
+  --proposed:#1C4A94; --proposed-bg:#DDE7F7;
+  --unresolved:#8A5200; --unresolved-bg:#FAEBC8;
+  --serif:Charter,"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.5rem}
+body{margin:0;background:var(--paper);color:var(--ink);font:1.0625rem/1.65 var(--sans);-webkit-text-size-adjust:100%}
+a{color:var(--brand);text-underline-offset:.15em}
+a:hover{color:var(--brand-dark)}
+:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:3px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+code{font-family:var(--mono);font-size:.9em;background:var(--brand-tint);padding:.1em .35em;border-radius:3px;overflow-wrap:anywhere}
+
+/* layout */
+.wrap{max-width:68rem;margin:0 auto;padding:0 1.25rem;display:grid;grid-template-columns:15.5rem minmax(0,46rem);column-gap:3rem}
+header.site{grid-column:1/-1;display:flex;align-items:baseline;gap:.75rem;padding:1.25rem 0 0;font-size:.95rem}
+header.site .brand{font-weight:700;text-decoration:none;color:var(--ink)}
+header.site .sep{color:var(--muted)}
+main{grid-column:2;min-width:0}
+
+/* rail */
+nav.rail{grid-column:1;grid-row:2;align-self:start;position:sticky;top:1.25rem;margin-top:2.5rem;max-height:calc(100vh - 2.5rem);overflow:auto;padding-bottom:1rem}
+.rail h2{margin:0 0 .75rem;font:600 .95rem var(--sans);color:var(--muted)}
+.rail ol{list-style:none;margin:0;padding:0;position:relative}
+.rail ol::before{content:"";position:absolute;left:.82rem;top:.9rem;bottom:.9rem;width:2px;background:var(--line)}
+.rail li{position:relative}
+.rail a{display:flex;align-items:center;gap:.7rem;text-decoration:none;color:var(--ink);padding:.28rem 0;font-size:.95rem;line-height:1.3}
+.rail .node{flex:none;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:700;position:relative;z-index:1}
+.rail .step[aria-current="true"] .node{border-color:var(--brand);color:var(--brand)}
+.rail .step[aria-current="true"] .label{font-weight:700}
+.rail .step.done .node{background:var(--brand);border-color:var(--brand);color:#fff;font-size:0}
+.rail .step.done .node::after{content:"\2713";font-size:.9rem}
+.rail .gate a{padding:.15rem 0 .15rem 0;font-size:.82rem;color:var(--gate);font-weight:600}
+.rail .gate .bar{flex:none;width:1.7rem;height:.9rem;display:grid;place-items:center;position:relative;z-index:1}
+.rail .gate .bar::before{content:"";width:1.3rem;height:.5rem;background:var(--gate);border-radius:2px;box-shadow:0 0 0 3px var(--paper)}
+.rail .gname{font-weight:500;color:var(--muted)}
+.progress{margin:.9rem 0 0;font-size:.9rem;color:var(--muted)}
+.progress strong{color:var(--ink)}
+
+/* hero */
+.hero{padding:2.75rem 0 1rem}
+h1{font:600 clamp(2.15rem,5.2vw,3.3rem)/1.08 var(--serif);letter-spacing:-.015em;margin:0 0 1rem}
+.hero .sub{font-size:1.2rem;line-height:1.55;max-width:38rem;margin:0 0 1.5rem}
+.actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:0 0 2.25rem}
+.btn{display:inline-block;padding:.7rem 1.15rem;border-radius:6px;font-weight:600;text-decoration:none;border:2px solid var(--brand);font-size:1rem;line-height:1.2}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-dark);border-color:var(--brand-dark);color:#fff}
+.btn.secondary{background:transparent;color:var(--brand)}
+.btn.secondary:hover{background:var(--brand-tint)}
+
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.25rem 1.1rem}
+.demo h2{font:600 1.2rem/1.3 var(--serif);margin:0 0 .25rem}
+.demo>p{margin:0 0 1rem;color:var(--muted);font-size:.98rem}
+.paths{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.1rem}
+.paths button{font:600 .95rem var(--sans);padding:.55rem .9rem;border-radius:6px;border:2px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.paths button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-tint)}
+.paths button:hover{border-color:var(--brand)}
+.chain{list-style:none;margin:0 0 .9rem;padding:0;display:flex;flex-wrap:wrap;gap:.45rem .35rem;align-items:center}
+.chain li{padding:.35rem .65rem;border-radius:5px;border:2px solid var(--line);background:var(--paper);font-size:.92rem;font-weight:600;transition:background-color .35s,border-color .35s,color .35s}
+.chain li.sep{border:0;background:none;padding:0;color:var(--line);font-weight:400;transition:none}
+.chain li.gate-mark{border:2px dashed var(--line);color:var(--muted);font-weight:500;background:none}
+.chain[data-state="open"] li.item{background:var(--gate-tint);border-color:var(--gate);color:#7A1812}
+.chain[data-state="gated"] li.item{background:var(--confirmed-bg);border-color:var(--confirmed);color:var(--confirmed)}
+.chain[data-state="gated"] li.gate-mark{border:2px solid var(--gate);background:var(--gate);color:#fff;font-weight:700}
+.chain[data-state="open"] li.item:nth-of-type(3){transition-delay:0.12s}
+.chain[data-state="open"] li.item:nth-of-type(7){transition-delay:0.24s}
+.chain[data-state="open"] li.item:nth-of-type(9){transition-delay:0.36s}
+.chain[data-state="open"] li.item:nth-of-type(11){transition-delay:0.48s}
+.chain[data-state="open"] li.item:nth-of-type(13){transition-delay:0.6s}
+.outcome{margin:0;font-size:1rem;min-height:3.2em}
+
+/* sections */
+section{margin:0}
+.block{padding:2.5rem 0 0}
+h2.sec{font:600 1.75rem/1.2 var(--serif);margin:0 0 .75rem;letter-spacing:-.005em}
+h3{font:600 1.15rem/1.3 var(--serif);margin:1.5rem 0 .4rem}
+p{margin:0 0 1rem;max-width:42rem}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem}
+.chip{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-size:.9rem;font-weight:700}
+.chip.c{background:var(--confirmed-bg);color:var(--confirmed)}
+.chip.p{background:var(--proposed-bg);color:var(--proposed)}
+.chip.u{background:var(--unresolved-bg);color:var(--unresolved)}
+
+.lesson{padding:3rem 0 0;border-top:1px solid var(--line);margin-top:2.75rem}
+.lesson h2{font:600 1.65rem/1.2 var(--serif);margin:0 0 .5rem;display:flex;gap:.7rem;align-items:baseline;letter-spacing:-.005em}
+.lesson .num{flex:none;display:inline-grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:var(--brand);color:#fff;font:700 1rem var(--sans);transform:translateY(-.1rem)}
+.lede{font-size:1.1rem;color:var(--muted);margin-bottom:1.25rem}
+
+.panel{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:6px;margin:0 0 1.1rem}
+.panel pre{margin:0;padding:1rem 1rem 1rem 1.1rem;font:.9rem/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+.panel .copy{position:absolute;top:.55rem;right:.55rem;font:600 .82rem var(--sans);padding:.3rem .65rem;border-radius:5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.panel .copy:hover{border-color:var(--brand);background:var(--brand-tint)}
+.panel pre{padding-top:2.6rem}
+
+.checkpoint{border-left:4px solid var(--gate);background:var(--gate-tint);border-radius:0 6px 6px 0;padding:.85rem 1rem;margin:0 0 1.1rem}
+.checkpoint p{margin:0;max-width:none}
+.checkpoint strong{color:var(--gate)}
+
+.table-wrap{overflow-x:auto;margin:0 0 1.25rem;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.95rem;line-height:1.5}
+th,td{text-align:left;vertical-align:top;padding:.6rem .8rem;border-bottom:1px solid var(--line)}
+th{background:var(--brand-tint);font-weight:700}
+tr:last-child td{border-bottom:0}
+
+.done{display:inline-flex;align-items:center;gap:.6rem;margin:.25rem 0 0;cursor:pointer;font-weight:600}
+.done input{width:1.25rem;height:1.25rem;accent-color:var(--brand)}
+
+ol.rules,.rules-wrap ol{padding-left:1.4rem;margin:0 0 1rem;max-width:42rem}
+.rules-wrap li,.principles li{margin-bottom:.4rem}
+.principles ul{padding-left:1.25rem;margin:0 0 1rem;max-width:42rem}
+
+footer{padding:3rem 0 4rem;color:var(--muted);font-size:.95rem}
+footer p{margin:0 0 .4rem}
+
+/* narrow screens: rail becomes a sticky strip */
+@media (max-width:63rem){
+  .wrap{display:block}
+  header.site{padding-bottom:.75rem}
+  nav.rail{position:sticky;top:0;z-index:5;margin:0 -1.25rem;padding:.55rem 1.25rem;background:var(--paper);border-bottom:1px solid var(--line);max-height:none;overflow:visible}
+  .rail h2,.rail .progress{display:none}
+  .rail ol{display:flex;gap:.15rem;overflow-x:auto;align-items:center;padding-bottom:.15rem}
+  .rail ol::before{display:none}
+  .rail .label,.rail .gname{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .rail a{padding:.25rem .15rem;min-height:2.75rem}
+  .rail .gate .bar{width:.9rem}
+  .rail .gate .bar::before{width:.35rem;height:1.4rem;box-shadow:none}
+  html{scroll-padding-top:4.75rem}
+  .panel pre{font-size:.85rem}
+  .hero{padding-top:1.5rem}
+  .lesson{margin-top:2rem}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .chain li{transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <a class="brand" href="https://mentoringba.org">MentoringBA</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span>BA Automation Lab</span>
+  </header>
+
+  <nav class="rail" aria-label="Course progress">
+    <h2>The workflow</h2>
+    <ol>
+<li class="step" data-stage="1"><a href="#stage-1"><span class="node" aria-hidden="true">1</span><span class="label"><span class="vh">Stage 1: </span>Requirements</span></a></li>
+<li class="gate"><a href="#gates"><span class="bar" aria-hidden="true"></span><span class="label">Gate 1<span class="vh">: </span><span class="gname"> Requirements baseline</span></span></a></li>
+<li class="step" data-stage="2"><a href="#stage-2"><span class="node" aria-hidden="true">2</span><span class="label"><span class="vh">Stage 2: </span>User stories</span></a></li>
+<li class="step" data-stage="3"><a href="#stage-3"><span class="node" aria-hidden="true">3</span><span class="label"><span class="vh">Stage 3: </span>Backlog</span></a></li>
+<li class="gate"><a href="#gates"><span class="bar" aria-hidden="true"></span><span class="label">Gate 2<span class="vh">: </span><span class="gname"> Publication</span></span></a></li>
+<li class="step" data-stage="4"><a href="#stage-4"><span class="node" aria-hidden="true">4</span><span class="label"><span class="vh">Stage 4: </span>SQL checks</span></a></li>
+<li class="step" data-stage="5"><a href="#stage-5"><span class="node" aria-hidden="true">5</span><span class="label"><span class="vh">Stage 5: </span>API requirements</span></a></li>
+<li class="gate"><a href="#gates"><span class="bar" aria-hidden="true"></span><span class="label">Gate 3<span class="vh">: </span><span class="gname"> Interface and data</span></span></a></li>
+<li class="step" data-stage="6"><a href="#stage-6"><span class="node" aria-hidden="true">6</span><span class="label"><span class="vh">Stage 6: </span>UAT</span></a></li>
+<li class="step" data-stage="7"><a href="#stage-7"><span class="node" aria-hidden="true">7</span><span class="label"><span class="vh">Stage 7: </span>Traceability</span></a></li>
+<li class="gate"><a href="#gates"><span class="bar" aria-hidden="true"></span><span class="label">Gate 4<span class="vh">: </span><span class="gname"> UAT and sign-off</span></span></a></li>
+<li class="step" data-stage="8"><a href="#stage-8"><span class="node" aria-hidden="true">8</span><span class="label"><span class="vh">Stage 8: </span>Quality review</span></a></li>
+    </ol>
+    <p class="progress" id="progress" aria-live="polite"><strong>0 of 8</strong> stages finished</p>
+  </nav>
+
+  <main id="top">
+    <section class="hero">
+      <h1>Automate the paperwork. Keep the judgement.</h1>
+      <p class="sub">A hands-on course for Business Analysts. You will use an AI agent to draft requirements, user stories, tests and traceability from stakeholder notes. You stop at four approval gates, where you decide.</p>
+      <div class="actions">
+        <a class="btn primary" href="ba-automation-toolkit.zip" download>Download the toolkit</a>
+        <a class="btn secondary" href="#start">Set up your machine</a>
+      </div>
+
+      <div class="demo">
+        <h2>Why the gates matter</h2>
+        <p>One unverified rule in the meeting notes. Choose what happens next.</p>
+        <div class="paths">
+          <button type="button" data-path="open" aria-pressed="false">Build on it without checking</button>
+          <button type="button" data-path="gated" aria-pressed="false">Check it at Gate 1</button>
+        </div>
+        <ol class="chain" id="chain" data-state="idle" aria-label="Where the rule ends up">
+          <li class="item">Meeting notes</li><li class="sep" aria-hidden="true">&rsaquo;</li>
+          <li class="item">Requirement</li><li class="sep" aria-hidden="true">&rsaquo;</li>
+          <li class="gate-mark">Gate 1</li><li class="sep" aria-hidden="true">&rsaquo;</li>
+          <li class="item">User story</li><li class="sep" aria-hidden="true">&rsaquo;</li>
+          <li class="item">Backlog item</li><li class="sep" aria-hidden="true">&rsaquo;</li>
+          <li class="item">SQL check</li><li class="sep" aria-hidden="true">&rsaquo;</li>
+          <li class="item">RTM row</li>
+        </ol>
+        <p class="outcome" id="outcome" aria-live="polite">Pick a path to see what happens to the rule.</p>
+      </div>
+    </section>
+
+    <section class="block" id="how">
+      <h2 class="sec">How the course works</h2>
+      <p>You work through eight stages in order. The output of each stage is the input to the next. You use any AI agent that can read a folder: Claude Code, Codex, Cursor, Copilot, opencode, Windsurf or Gemini CLI.</p>
+      <p>Every item the agent writes is labelled as one of three things. A guess is never presented as a fact.</p>
+      <div class="chips"><span class="chip c">Confirmed</span><span class="chip p">Proposed</span><span class="chip u">Unresolved</span></div>
+      <p>At each red checkpoint you stop and make a human decision before you continue. The case study is a fictional online-banking address update.</p>
+    </section>
+
+    <section class="block" id="start">
+      <h2 class="sec">Set up your machine</h2>
+      <p>You need Node.js 20 or later with npm, Python 3, a terminal and an editor such as VS Code. Stages 1, 2, 4, 5, 7 and 8 work with one chat agent and no accounts. Backlog publishing (stage 3) and browser testing (stage 6) need extra connections.</p>
+      <p><a class="btn primary" href="ba-automation-toolkit.zip" download>Download the toolkit</a></p>
+      <p>Unzip it, open a terminal in the folder, and run the demo data check. It works offline.</p>
+      <div class="panel"><button type="button" class="copy" data-target="p11">Copy commands</button><pre id="p11">unzip ba-automation-toolkit.zip
+cd ba-automation-toolkit
+python3 tools/init_db.py
+python3 tools/run_sql_checks.py</pre></div>
+      <p>Then open your AI agent in that folder and start at stage 1.</p>
+      <h3>Which agent reads which file</h3>
+      <div class="table-wrap"><table><thead><tr><th scope="col">Agent</th><th scope="col">Start in this folder</th><th scope="col">Reads rules from</th><th scope="col">Skills support</th></tr></thead><tbody><tr><td>Claude Code</td><td><code>claude</code></td><td><code>CLAUDE.md</code></td><td><code>.claude/skills/</code></td></tr><tr><td>Codex CLI</td><td><code>codex</code></td><td><code>AGENTS.md</code></td><td><code>.agents/skills/</code></td></tr><tr><td>opencode</td><td><code>opencode</code></td><td><code>AGENTS.md</code></td><td><code>.agents/skills/</code></td></tr><tr><td>Cursor</td><td>open folder</td><td><code>AGENTS.md</code> / <code>CLAUDE.md</code></td><td>rules only</td></tr><tr><td>VS Code Copilot</td><td>open folder</td><td><code>AGENTS.md</code></td><td>—</td></tr><tr><td>Gemini CLI</td><td><code>gemini</code></td><td><code>GEMINI.md</code> (copy of AGENTS.md if needed)</td><td>—</td></tr></tbody></table></div>
+    </section>
+
+    <div class="stages">
+<section class="lesson" id="stage-1" aria-labelledby="h-1"><h2 id="h-1"><span class="num" aria-hidden="true">1</span>Requirements elicitation</h2><p class="lede">Turn stakeholder notes into a requirements register where every item cites its source.</p><div class="panel"><button type="button" class="copy" data-target="p1">Copy prompt</button><pre id="p1">Use the ba-requirements skill (if your agent supports skills; otherwise this
+prompt is the skill).
+Read input/meeting-notes.md and input/scope.md.
+Extract objectives, stakeholders, FRs, NFR candidates, API/data candidates,
+scope, risks and dependencies.
+For every finding, cite the exact source.
+Label each item Confirmed, Proposed or Unresolved.
+Identify questions requiring stakeholder answers.
+Create the files: requirements/requirements-register.md,
+requirements/clarification-log.md, validation/requirements-review.md.
+No external writes.</pre></div>
+<aside class="checkpoint"><p><strong>Checkpoint 1</strong> — every assertion has source evidence or explicit draft status. Stakeholder decisions exist for rules, scope and priorities before the baseline is approved. Compare against <code>requirements/requirements-register.sample.md</code>.</p></aside><label class="done"><input type="checkbox" data-stage="1"><span>I have finished stage 1</span></label></section>
+<section class="lesson" id="stage-2" aria-labelledby="h-2"><h2 id="h-2"><span class="num" aria-hidden="true">2</span>User stories &amp; acceptance criteria</h2><p class="lede">Write INVEST stories with Given/When/Then criteria from the reviewed requirements.</p><div class="panel"><button type="button" class="copy" data-target="p2">Copy prompt</button><pre id="p2">Read the reviewed requirements register.
+Create epics and INVEST user stories with IDs.
+Include linked requirement IDs, user benefit,
+Given/When/Then acceptance criteria, positive, negative and boundary
+scenarios, dependencies, and a Definition of Ready assessment.
+Mark unconfirmed behaviours for stakeholder review.
+Save to stories/user-stories.md.</pre></div>
+<p>Expected shape: <code>stories/user-stories.sample.md</code>. Criteria remain draft until stakeholders confirm exact business and technical behaviors.</p><label class="done"><input type="checkbox" data-stage="2"><span>I have finished stage 2</span></label></section>
+<section class="lesson" id="stage-3" aria-labelledby="h-3"><h2 id="h-3"><span class="num" aria-hidden="true">3</span>Backlog publication (choose a backend)</h2><p class="lede">Publish the approved stories to a backlog, only after you approve a preview.</p><p>Pick one adapter in <code>adapters/</code> — the prompt below is the same for all:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Backend</th><th scope="col">Cost</th><th scope="col">Best when</th></tr></thead><tbody><tr><td><code>GitHub Issues</code></td><td>Free</td><td>Default for students — real issue keys, enforced gates</td></tr><tr><td><code>Trello</code></td><td>Free</td><td>Visual kanban preference</td></tr><tr><td><code>Google Sheets → NativeTasks</code></td><td>Free</td><td>Backlog where the team already works</td></tr><tr><td><code>Atlassian Jira/Confluence</code></td><td>Free sandbox / paid site</td><td>Enterprise realism, the guide's default</td></tr></tbody></table></div>
+<div class="panel"><button type="button" class="copy" data-target="p3">Copy prompt</button><pre id="p3">Read reviewed stories and requirements.
+Using the connected backlog tool for my workspace:
+find the authorized project/board/sheet.
+Show a preview of epic/story titles, acceptance criteria, requirement
+mappings and duplicates. Do not write anything yet. Ask for approval.
+After approval create only the agreed items.
+Return actual issue keys / card IDs / row numbers.
+Update the local mappings with verified identifiers.</pre></div>
+<p>No connection available → save drafts locally and do not assert publication.</p>
+<aside class="checkpoint"><p><strong>Checkpoint 2</strong> — verify the item type, story body, criteria, scope, ownership and the actual key/card/row directly in the backend, by hand.</p></aside><label class="done"><input type="checkbox" data-stage="3"><span>I have finished stage 3</span></label></section>
+<section class="lesson" id="stage-4" aria-labelledby="h-4"><h2 id="h-4"><span class="num" aria-hidden="true">4</span>SQL data validation (no agent needed to run)</h2><p class="lede">Check the data with SELECT-only queries. This stage runs without an agent.</p><div class="panel"><button type="button" class="copy" data-target="p4">Copy commands</button><pre id="p4">python3 tools/init_db.py
+python3 tools/run_sql_checks.py</pre></div>
+<div class="panel"><button type="button" class="copy" data-target="p5">Copy prompt</button><pre id="p5">Analyze data/setup.sql and the SQLite database data/banking_demo.db.
+Explain table relationships; create a data dictionary and a Mermaid ERD.
+Write SELECT-only validation queries. Execute locally if available,
+compare actual with expected, and record risks. Never change source records.
+Save to data/data-validation.md.</pre></div>
+<p>The dataset deliberately contains an orphan audit record and a reconciliation question (customer 101's address). The runner expects: orphan (change_id 5, customer_id 999); counts FAILED=1, PENDING=1, SUCCESS=3. Flag mismatches as questions for confirmation — not as proven production defects.</p><label class="done"><input type="checkbox" data-stage="4"><span>I have finished stage 4</span></label></section>
+<section class="lesson" id="stage-5" aria-labelledby="h-5"><h2 id="h-5"><span class="num" aria-hidden="true">5</span>API requirements</h2><p class="lede">Document the interface without inventing an endpoint.</p><p>The meeting notes do <strong>not</strong> establish a real endpoint. An illustrative JSON shape lives in <code>requirements/api-shape.example.json</code> — it is not a contract.</p>
+<div class="panel"><button type="button" class="copy" data-target="p6">Copy prompt</button><pre id="p6">Read approved FRs and any supplied OpenAPI specification.
+Document interface purpose, consumer/provider, methods/endpoints, fields,
+authentication, response codes, errors, timeouts, retry/idempotency,
+privacy and logging.
+Separate Confirmed, Proposed and Unknown.
+Never invent a production endpoint or confirmed response.
+Save to requirements/api-requirements.md.</pre></div>
+<aside class="checkpoint"><p><strong>Checkpoint 3</strong> — the API owner verifies the real OpenAPI/Swagger contract, response mapping, authorization, failure handling, transaction state and idempotency policy.</p></aside><label class="done"><input type="checkbox" data-stage="5"><span>I have finished stage 5</span></label></section>
+<section class="lesson" id="stage-6" aria-labelledby="h-6"><h2 id="h-6"><span class="num" aria-hidden="true">6</span>UAT generation &amp; Playwright execution</h2><p class="lede">Create the UAT pack, then run it against an approved staging URL only.</p><p>Generate the pack with any agent:</p>
+<div class="panel"><button type="button" class="copy" data-target="p7">Copy prompt</button><pre id="p7">Read approved stories, AC and API requirements.
+Create a UAT pack with TC ID, mapped requirement, preconditions, test data,
+steps, expected result, actual result, status, evidence, defect and owner.
+Cover success, invalid/missing input, unauthenticated access, service
+failure, duplicate submission and pending updates where applicable.
+Mark open rules as Blocked. Save to uat/uat-test-cases.md.</pre></div>
+<p>Execution needs an approved staging URL — see <code>SETUP.md</code> for Playwright MCP / browser automation per agent:</p>
+<div class="panel"><button type="button" class="copy" data-target="p8">Copy prompt</button><pre id="p8">Using browser automation against [APPROVED_STAGING_URL] only,
+with synthetic test users only. First confirm environment, test credentials,
+fixtures and executable cases. Show the plan and request approval.
+Once approved: run cases, capture observed behavior and approved evidence,
+record Pass/Fail/Blocked/Not Run, and draft defect reports.
+Do not run on production or invent evidence.</pre></div>
+<p>No staging app → all cases stay Not Run. The public TodoMVC exercise (https://demo.playwright.dev/todomvc) is a connectivity test only.</p><label class="done"><input type="checkbox" data-stage="6"><span>I have finished stage 6</span></label></section>
+<section class="lesson" id="stage-7" aria-labelledby="h-7"><h2 id="h-7"><span class="num" aria-hidden="true">7</span>Traceability matrix (RTM)</h2><p class="lede">Link requirements, stories, tests and evidence, and find the gaps.</p><div class="panel"><button type="button" class="copy" data-target="p9">Copy prompt</button><pre id="p9">Read requirements, stories, API/data requirements, actual issue keys /
+card IDs / sheet rows, UAT cases and execution records.
+Create traceability/rtm.md.
+Include BR, FR, NFR/API/DATA, US, issue key, AC, TC, execution status,
+evidence, defect and source.
+Find orphan requirements, uncovered tests, broken links, unapproved scope
+and unsupported status claims.
+Do not manufacture issue keys or evidence.</pre></div>
+<p>See <code>traceability/rtm.sample.md</code> for shape and a gap-report example.</p><label class="done"><input type="checkbox" data-stage="7"><span>I have finished stage 7</span></label></section>
+<section class="lesson" id="stage-8" aria-labelledby="h-8"><h2 id="h-8"><span class="num" aria-hidden="true">8</span>Independent quality review</h2><p class="lede">Have a fresh session or a different agent review all of the work.</p><p>Run this in a <strong>fresh session or a different agent</strong> than produced the work:</p>
+<div class="panel"><button type="button" class="copy" data-target="p10">Copy prompt</button><pre id="p10">Act as an independent Senior BA quality reviewer.
+Review the original sources and all generated artifacts.
+Identify unsupported requirements, missing business rules, contradictions,
+scope changes, non-INVEST stories, untestable AC, API assumptions,
+incorrect SQL conclusions, missing UAT coverage, broken traceability and
+unsupported Pass claims.
+For every finding provide ID, severity, exact location, evidence, impact,
+corrective action, owner and status.
+Mark each artifact Ready / Ready with Conditions / Rework.
+Do not change files without approval.</pre></div>
+<p>Record results with <code>validation/report-template.md</code>.</p><label class="done"><input type="checkbox" data-stage="8"><span>I have finished stage 8</span></label></section>
+    </div>
+
+    <section class="block" id="gates" style="margin-top:3rem">
+      <h2 class="sec">The four approval gates</h2>
+      <p>No agent signs off business decisions or test results for you. These are the points where you act.</p>
+      <div class="table-wrap"><table><thead><tr><th scope="col">Gate</th><th scope="col">Owner action</th></tr></thead><tbody><tr><td>1. Requirements baseline</td><td>Validate scope, source evidence, open rules, priorities</td></tr><tr><td>2. Publication</td><td>Approve content and destination before any backlog write (GitHub/Trello/Sheets/Jira)</td></tr><tr><td>3. Interface / data</td><td>Confirm real API contract, data rules, query findings</td></tr><tr><td>4. UAT / sign-off</td><td>Approve staging execution, inspect evidence, review traceability</td></tr></tbody></table></div>
+    </section>
+
+    <section class="block rules-wrap" id="rules">
+      <h2 class="sec">Rules every agent must follow</h2>
+      <p>These rules are in the toolkit as <code>AGENTS.md</code> and <code>CLAUDE.md</code>, and your agent picks them up automatically.</p>
+      <ol><li>Never invent requirements or API contracts.</li><li>Separate <strong>Confirmed</strong>, <strong>Proposed</strong> and <strong>Unresolved</strong> — never present a guess as a fact.</li><li>IDs: BR, FR, NFR, API, DATA, US, TC. Unique, never reused.</li><li>Every requirement must cite its source (file + line/quote).</li><li>Use INVEST and Given/When/Then for stories.</li><li>No writes to external systems (backlog tools, wikis, tickets) without explicit human approval.</li><li>No database writes. No UAT against production.</li><li>Never invent test results, links or evidence. Unexecuted tests are "Not Run".</li></ol>
+    </section>
+
+    <section class="block principles" id="principles">
+      <h2 class="sec">Security and operating principles</h2>
+      <ul><li>Fictional or explicitly permitted sanitized data only in training.</li><li>Least-privilege service access; no secrets in prompts or repositories.</li><li>Human approval before publishing, editing, or consequential actions.</li><li>Source citations and actual execution evidence for every claim.</li><li>No agent self-certifies business sign-off or UAT success.</li></ul>
+    </section>
+
+    <footer>
+      <p>All banking data, names and systems in this course are fictitious.</p>
+      <p>Built for <a href="https://mentoringba.org">MentoringBA</a> students.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  var KEY="ba-lab-progress-v1";
+  function load(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return {}}}
+  function save(s){try{localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+  var state=load();
+  var boxes=[].slice.call(document.querySelectorAll("input[data-stage]"));
+  var steps=[].slice.call(document.querySelectorAll(".rail .step"));
+  var prog=document.getElementById("progress");
+  function paint(){
+    var n=0;
+    boxes.forEach(function(b){var on=!!state[b.dataset.stage];b.checked=on;if(on)n++;});
+    steps.forEach(function(s){s.classList.toggle("done",!!state[s.dataset.stage]);});
+    prog.innerHTML="<strong>"+n+" of 8</strong> stages finished";
+  }
+  boxes.forEach(function(b){b.addEventListener("change",function(){state[b.dataset.stage]=b.checked;save(state);paint();});});
+  paint();
+
+  /* copy buttons */
+  document.querySelectorAll(".copy").forEach(function(btn){
+    var label=btn.textContent;
+    btn.addEventListener("click",function(){
+      var text=document.getElementById(btn.dataset.target).textContent;
+      function ok(){btn.textContent="Copied";setTimeout(function(){btn.textContent=label;},1800);}
+      function fallback(){
+        var t=document.createElement("textarea");t.value=text;t.setAttribute("readonly","");t.style.position="fixed";t.style.opacity="0";
+        document.body.appendChild(t);t.select();
+        try{document.execCommand("copy");ok();}catch(e){btn.textContent="Press Ctrl+C to copy";}
+        document.body.removeChild(t);
+      }
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(ok,fallback);}else{fallback();}
+    });
+  });
+
+  /* gate demo */
+  var chain=document.getElementById("chain"),out=document.getElementById("outcome");
+  var msg={
+    open:"The unverified rule is now in six places. If it turns out to be wrong, you have to find and fix every one.",
+    gated:"The rule is confirmed or removed at Gate 1, before the story, backlog item, SQL check and RTM row depend on it."
+  };
+  document.querySelectorAll("[data-path]").forEach(function(b){
+    b.addEventListener("click",function(){
+      chain.dataset.state=b.dataset.path;
+      out.textContent=msg[b.dataset.path];
+      document.querySelectorAll("[data-path]").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});
+    });
+  });
+
+  /* current stage in the rail */
+  if("IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          var n=e.target.id.replace("stage-","");
+          steps.forEach(function(s){if(s.dataset.stage===n){s.setAttribute("aria-current","true");}else{s.removeAttribute("aria-current");}});
+        }
+      });
+    },{rootMargin:"-20% 0px -65% 0px"});
+    document.querySelectorAll(".lesson").forEach(function(l){io.observe(l);});
+  }
+})();
+</script>
+</body>
+</html>

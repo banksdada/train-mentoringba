@@ -90,3 +90,14 @@ from .routers import customers, jobs
 
 app.include_router(customers.router, prefix="/customers", tags=["customers"], dependencies=[Depends(get_current_user)])
 app.include_router(jobs.router, prefix="/jobs", tags=["jobs"], dependencies=[Depends(get_current_user)])
+
+# ---------------------------------------------------------------------------
+# Student learning site (BA Automation Lab)
+# Mounted LAST so every API route above (and /docs) keeps priority.
+# ---------------------------------------------------------------------------
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="site")
