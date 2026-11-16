@@ -5,18 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BA Automation Lab | MentoringBA</title>
 <meta name="description" content="A hands-on course for Business Analysts: use an AI agent to draft requirements, stories, tests and traceability, with four human approval gates.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%2314574B%27/%3E%3Crect x=%277%27 y=%2713%27 width=%2718%27 height=%276%27 rx=%272%27 fill=%27%23fff%27/%3E%3C/svg%3E">
+<link rel="icon" href="https://mentoringba.org/wp-content/uploads/2025/09/cropped-menroing-ba-logo-1-32x32.png" type="image/png">
 <style>
+@font-face{font-family:"Bricolage Grotesque";src:url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2");font-weight:200 800;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"DM Sans";src:url("fonts/dm-sans-latin-wght-normal.woff2") format("woff2");font-weight:100 1000;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
-  /* Brand colours live here. Change these values to restyle the whole site. */
-  --paper:#F2F5F3; --surface:#FFFFFF; --ink:#16292A; --muted:#4D625F; --line:#CCD6D2;
-  --brand:#14574B; --brand-dark:#0E3F36; --brand-tint:#E1EEE9;
-  --gate:#B3261E; --gate-tint:#FBE9E7;
-  --confirmed:#17613B; --confirmed-bg:#DCF0E3;
-  --proposed:#1C4A94; --proposed-bg:#DDE7F7;
-  --unresolved:#8A5200; --unresolved-bg:#FAEBC8;
-  --serif:Charter,"Iowan Old Style","Palatino Linotype",Georgia,serif;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  /* MentoringBA brand colours and fonts, taken from mentoringba.org.
+     Change the values here to restyle the whole site. */
+  --paper:#FBF6F2; --surface:#FFFFFF; --ink:#1A1412; --muted:#4A403C; --line:#E2D3CB; --sand:#EFE4DE;
+  --brand:#6E1E24; --brand-dark:#4A1216; --brand-tint:#FDE3E1;
+  --gate:#D8453F; --gate-text:#A8302B; --gate-tint:#FDE3E1;
+  --confirmed:#1F6B45; --confirmed-bg:#DCEFE4;
+  --proposed:#8C5A2B; --proposed-bg:#EFE4DE;
+  --unresolved:#A8302B; --unresolved-bg:#FDE3E1;
+  --display:"Bricolage Grotesque","DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
 }
 *{box-sizing:border-box}
@@ -30,8 +33,10 @@ code{font-family:var(--mono);font-size:.9em;background:var(--brand-tint);padding
 
 /* layout */
 .wrap{max-width:68rem;margin:0 auto;padding:0 1.25rem;display:grid;grid-template-columns:15.5rem minmax(0,46rem);column-gap:3rem}
-header.site{grid-column:1/-1;display:flex;align-items:baseline;gap:.75rem;padding:1.25rem 0 0;font-size:.95rem}
-header.site .brand{font-weight:700;text-decoration:none;color:var(--ink)}
+header.site{grid-column:1/-1;display:flex;align-items:center;gap:.75rem;padding:1.25rem 0 0;font-size:.95rem}
+header.site{align-items:center}
+header.site .brand{display:inline-flex;align-items:center;gap:.6rem;font:600 1.05rem var(--display);letter-spacing:-.01em;text-decoration:none;color:var(--ink)}
+header.site .brand img{width:44px;height:44px;display:block;object-fit:contain}
 header.site .sep{color:var(--muted)}
 main{grid-column:2;min-width:0}
 
@@ -47,7 +52,7 @@ nav.rail{grid-column:1;grid-row:2;align-self:start;position:sticky;top:1.25rem;m
 .rail .step[aria-current="true"] .label{font-weight:700}
 .rail .step.done .node{background:var(--brand);border-color:var(--brand);color:#fff;font-size:0}
 .rail .step.done .node::after{content:"\2713";font-size:.9rem}
-.rail .gate a{padding:.15rem 0 .15rem 0;font-size:.82rem;color:var(--gate);font-weight:600}
+.rail .gate a{padding:.15rem 0 .15rem 0;font-size:.82rem;color:var(--gate-text);font-weight:600}
 .rail .gate .bar{flex:none;width:1.7rem;height:.9rem;display:grid;place-items:center;position:relative;z-index:1}
 .rail .gate .bar::before{content:"";width:1.3rem;height:.5rem;background:var(--gate);border-radius:2px;box-shadow:0 0 0 3px var(--paper)}
 .rail .gname{font-weight:500;color:var(--muted)}
@@ -56,29 +61,30 @@ nav.rail{grid-column:1;grid-row:2;align-self:start;position:sticky;top:1.25rem;m
 
 /* hero */
 .hero{padding:2.75rem 0 1rem}
-h1{font:600 clamp(2.15rem,5.2vw,3.3rem)/1.08 var(--serif);letter-spacing:-.015em;margin:0 0 1rem}
+h1{font:600 clamp(2.15rem,5.2vw,3.3rem)/1.08 var(--display);letter-spacing:-.025em;margin:0 0 1rem}
 .hero .sub{font-size:1.2rem;line-height:1.55;max-width:38rem;margin:0 0 1.5rem}
 .actions{display:flex;flex-wrap:wrap;gap:.75rem;margin:0 0 2.25rem}
-.btn{display:inline-block;padding:.7rem 1.15rem;border-radius:6px;font-weight:600;text-decoration:none;border:2px solid var(--brand);font-size:1rem;line-height:1.2}
+.btn{display:inline-block;padding:.75rem 1.4rem;border-radius:999px;font-weight:600;text-decoration:none;border:2px solid var(--brand);font-size:1rem;line-height:1.2}
 .btn.primary{background:var(--brand);color:#fff}
 .btn.primary:hover{background:var(--brand-dark);border-color:var(--brand-dark);color:#fff}
 .btn.secondary{background:transparent;color:var(--brand)}
 .btn.secondary:hover{background:var(--brand-tint)}
+.btn.primary:focus-visible,.btn.secondary:focus-visible{outline-offset:4px}
 
-.demo{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.25rem 1.1rem}
-.demo h2{font:600 1.2rem/1.3 var(--serif);margin:0 0 .25rem}
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1.4rem 1.4rem 1.2rem}
+.demo h2{font:600 1.2rem/1.3 var(--display);margin:0 0 .25rem}
 .demo>p{margin:0 0 1rem;color:var(--muted);font-size:.98rem}
 .paths{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1.1rem}
-.paths button{font:600 .95rem var(--sans);padding:.55rem .9rem;border-radius:6px;border:2px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.paths button{font:600 .95rem var(--sans);padding:.55rem 1.05rem;border-radius:999px;border:2px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
 .paths button[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-tint)}
 .paths button:hover{border-color:var(--brand)}
 .chain{list-style:none;margin:0 0 .9rem;padding:0;display:flex;flex-wrap:wrap;gap:.45rem .35rem;align-items:center}
 .chain li{padding:.35rem .65rem;border-radius:5px;border:2px solid var(--line);background:var(--paper);font-size:.92rem;font-weight:600;transition:background-color .35s,border-color .35s,color .35s}
 .chain li.sep{border:0;background:none;padding:0;color:var(--line);font-weight:400;transition:none}
 .chain li.gate-mark{border:2px dashed var(--line);color:var(--muted);font-weight:500;background:none}
-.chain[data-state="open"] li.item{background:var(--gate-tint);border-color:var(--gate);color:#7A1812}
+.chain[data-state="open"] li.item{background:var(--gate-tint);border-color:var(--gate);color:#7E1F1A}
 .chain[data-state="gated"] li.item{background:var(--confirmed-bg);border-color:var(--confirmed);color:var(--confirmed)}
-.chain[data-state="gated"] li.gate-mark{border:2px solid var(--gate);background:var(--gate);color:#fff;font-weight:700}
+.chain[data-state="gated"] li.gate-mark{border:2px solid var(--gate-text);background:var(--gate-text);color:#fff;font-weight:700}
 .chain[data-state="open"] li.item:nth-of-type(3){transition-delay:0.12s}
 .chain[data-state="open"] li.item:nth-of-type(7){transition-delay:0.24s}
 .chain[data-state="open"] li.item:nth-of-type(9){transition-delay:0.36s}
@@ -89,8 +95,8 @@ h1{font:600 clamp(2.15rem,5.2vw,3.3rem)/1.08 var(--serif);letter-spacing:-.015em
 /* sections */
 section{margin:0}
 .block{padding:2.5rem 0 0}
-h2.sec{font:600 1.75rem/1.2 var(--serif);margin:0 0 .75rem;letter-spacing:-.005em}
-h3{font:600 1.15rem/1.3 var(--serif);margin:1.5rem 0 .4rem}
+h2.sec{font:600 1.75rem/1.2 var(--display);margin:0 0 .75rem;letter-spacing:-.02em}
+h3{font:600 1.15rem/1.3 var(--display);margin:1.5rem 0 .4rem}
 p{margin:0 0 1rem;max-width:42rem}
 .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem}
 .chip{display:inline-block;padding:.15rem .6rem;border-radius:999px;font-size:.9rem;font-weight:700}
@@ -99,21 +105,21 @@ p{margin:0 0 1rem;max-width:42rem}
 .chip.u{background:var(--unresolved-bg);color:var(--unresolved)}
 
 .lesson{padding:3rem 0 0;border-top:1px solid var(--line);margin-top:2.75rem}
-.lesson h2{font:600 1.65rem/1.2 var(--serif);margin:0 0 .5rem;display:flex;gap:.7rem;align-items:baseline;letter-spacing:-.005em}
+.lesson h2{font:600 1.65rem/1.2 var(--display);margin:0 0 .5rem;display:flex;gap:.7rem;align-items:baseline;letter-spacing:-.02em}
 .lesson .num{flex:none;display:inline-grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:var(--brand);color:#fff;font:700 1rem var(--sans);transform:translateY(-.1rem)}
 .lede{font-size:1.1rem;color:var(--muted);margin-bottom:1.25rem}
 
-.panel{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:6px;margin:0 0 1.1rem}
+.panel{position:relative;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;margin:0 0 1.1rem}
 .panel pre{margin:0;padding:1rem 1rem 1rem 1.1rem;font:.9rem/1.6 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
-.panel .copy{position:absolute;top:.55rem;right:.55rem;font:600 .82rem var(--sans);padding:.3rem .65rem;border-radius:5px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.panel .copy{position:absolute;top:.55rem;right:.55rem;font:600 .82rem var(--sans);padding:.3rem .75rem;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
 .panel .copy:hover{border-color:var(--brand);background:var(--brand-tint)}
 .panel pre{padding-top:2.6rem}
 
-.checkpoint{border-left:4px solid var(--gate);background:var(--gate-tint);border-radius:0 6px 6px 0;padding:.85rem 1rem;margin:0 0 1.1rem}
+.checkpoint{border-left:4px solid var(--gate);background:var(--gate-tint);border-radius:0 10px 10px 0;padding:.85rem 1rem;margin:0 0 1.1rem}
 .checkpoint p{margin:0;max-width:none}
-.checkpoint strong{color:var(--gate)}
+.checkpoint strong{color:var(--gate-text)}
 
-.table-wrap{overflow-x:auto;margin:0 0 1.25rem;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.table-wrap{overflow-x:auto;margin:0 0 1.25rem;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 table{border-collapse:collapse;width:100%;font-size:.95rem;line-height:1.5}
 th,td{text-align:left;vertical-align:top;padding:.6rem .8rem;border-bottom:1px solid var(--line)}
 th{background:var(--brand-tint);font-weight:700}
@@ -155,7 +161,7 @@ footer p{margin:0 0 .4rem}
 <body>
 <div class="wrap">
   <header class="site">
-    <a class="brand" href="https://mentoringba.org">MentoringBA</a>
+    <a class="brand" href="https://mentoringba.org"><img src="https://mentoringba.org/wp-content/uploads/2026/10/mentoringba-logo-150x150.png" alt="" width="44" height="44"><span>MentoringBA</span></a>
     <span class="sep" aria-hidden="true">/</span>
     <span>BA Automation Lab</span>
   </header>
