@@ -16,6 +16,9 @@ import jwt
 # Configuration
 # ---------------------------------------------------------------------------
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./quickstack.db")
+# Some hosts give "postgres://..." but SQLAlchemy needs "postgresql://..."
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = "postgresql://" + DATABASE_URL[len("postgres://"):]
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -58,10 +61,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        sub = payload.get("sub")
+        if sub is None:
             raise credentials_exception
-    except jwt.PyJWTError:
+        user_id = int(sub)
+    except (jwt.PyJWTError, ValueError):
         raise credentials_exception
     with Session(engine) as session:
         user = session.get(models.User, user_id)
@@ -80,7 +84,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         user = session.exec(statement).first()
         if not user or form_data.password != "password":
             raise HTTPException(status_code=400, detail="Incorrect username or password")
-        access_token = create_access_token(data={"sub": user.id})
+        access_token = create_access_token(data={"sub": str(user.id)})
         return {"access_token": access_token, "token_type": "bearer"}
 
 # ---------------------------------------------------------------------------
