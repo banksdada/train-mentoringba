@@ -1,0 +1,34 @@
+/* "Ask the Lab" help box – uses the site's brand variables */
+.ask-fab{position:fixed;right:20px;bottom:20px;z-index:60;display:inline-flex;align-items:center;gap:8px;
+  background:var(--brand);color:#fff;border:0;border-radius:999px;padding:13px 20px;font:600 1rem var(--sans);
+  cursor:pointer;box-shadow:0 6px 20px rgba(74,18,22,.28)}
+.ask-fab:hover{background:var(--brand-dark)}
+.ask-panel{position:fixed;right:20px;bottom:20px;z-index:61;width:min(400px,calc(100vw - 24px));max-height:calc(100vh - 40px);
+  display:none;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 40px rgba(26,20,18,.22);overflow:hidden;font:400 .95rem/1.5 var(--sans);color:var(--ink)}
+.ask-panel.open{display:flex}
+.ask-head{display:flex;align-items:center;justify-content:space-between;background:var(--brand);color:#fff;padding:12px 16px}
+.ask-head h2{margin:0;font:700 1.05rem var(--display);color:#fff}
+.ask-close{background:transparent;border:0;color:#fff;font-size:1.5rem;line-height:1;cursor:pointer;padding:0 4px}
+.ask-body{padding:14px 16px;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.ask-note{font-size:.82rem;color:var(--muted);margin:0}
+.ask-body label{font-weight:600;font-size:.88rem}
+.ask-body input,.ask-body textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;
+  padding:9px 10px;font:inherit;color:var(--ink);background:var(--paper)}
+.ask-body textarea{min-height:84px;resize:vertical}
+.ask-send{align-self:flex-start;background:var(--brand);color:#fff;border:0;border-radius:8px;padding:10px 18px;font:600 .95rem var(--sans);cursor:pointer}
+.ask-send:hover{background:var(--brand-dark)}
+.ask-send:disabled{opacity:.6;cursor:wait}
+.ask-answer{background:var(--sand);border-radius:8px;padding:10px 12px;white-space:pre-wrap;display:none}
+.ask-answer.show{display:block}
+.ask-answer.err{background:var(--unresolved-bg);color:var(--unresolved)}
+.ask-contact{border-top:1px solid var(--line);padding:12px 16px;background:var(--paper)}
+.ask-contact p{margin:0 0 8px;font-size:.85rem;font-weight:600}
+.ask-contact div{display:flex;flex-wrap:wrap;gap:8px}
+.ask-contact a{border:1.5px solid var(--brand);color:var(--brand);text-decoration:none;border-radius:8px;padding:7px 12px;font-weight:600;font-size:.88rem}
+.ask-contact a:hover{background:var(--brand-tint)}
+.ask-fab:focus-visible,.ask-close:focus-visible,.ask-send:focus-visible,.ask-contact a:focus-visible,
+.ask-body input:focus-visible,.ask-body textarea:focus-visible{outline:3px solid var(--gate);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.ask-panel.open{animation:askin .15s ease-out}}
+@keyframes askin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media print{.ask-fab,.ask-panel{display:none!important}}

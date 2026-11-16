@@ -5,6 +5,7 @@
 - `Job` – scheduling entry, linked to a `Customer`.
 """
 
+from datetime import datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel, Relationship
 
@@ -36,3 +37,13 @@ class Job(SQLModel, table=True):
 
     customer_id: int = Field(foreign_key="customer.id")
     customer: Customer = Relationship(back_populates="jobs")
+
+
+class StudentQuestion(SQLModel, table=True):
+    """A question typed into the 'Ask the Lab' help box (kept for the trainer's records)."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    student_name: str
+    question: str
+    answer: str
+    answered: bool = True  # False when the assistant said it could not help
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)

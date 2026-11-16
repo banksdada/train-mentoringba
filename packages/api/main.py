@@ -90,10 +90,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 # ---------------------------------------------------------------------------
 # Include routers (CRUD for customers & jobs)
 # ---------------------------------------------------------------------------
-from .routers import customers, jobs
+from .routers import customers, jobs, support
 
 app.include_router(customers.router, prefix="/customers", tags=["customers"], dependencies=[Depends(get_current_user)])
 app.include_router(jobs.router, prefix="/jobs", tags=["jobs"], dependencies=[Depends(get_current_user)])
+app.include_router(support.router, prefix="/api", tags=["support"])
 
 # ---------------------------------------------------------------------------
 # Student learning site (BA Automation Lab)
